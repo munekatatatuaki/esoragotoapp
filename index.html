@@ -220,6 +220,7 @@
       height: 100vh;
       padding: 1.5rem 0;
       z-index: 10;
+      transition: transform 0.2s ease;
     }
 
     .logo {
@@ -228,12 +229,61 @@
       font-weight: 600;
       padding: 0 1.25rem 1.25rem;
       letter-spacing: -0.02em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     .logo-dot { width: 7px; height: 7px; background: var(--accent-light); border-radius: 50%; }
+
+    /* サイドバー開閉用ボタンのスタイル */
+    .sidebar-toggle-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.12s, background 0.12s;
+    }
+    .sidebar-toggle-close:hover {
+      color: var(--text-primary);
+      background: var(--surface2);
+    }
+
+    .sidebar-toggle-open {
+      position: fixed;
+      top: 1.5rem;
+      left: 1.5rem;
+      z-index: 9;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: all 0.12s;
+    }
+    .sidebar-toggle-open:hover {
+      color: var(--text-primary);
+      border-color: var(--accent-light);
+    }
+
+    body.sidebar-collapsed .sidebar {
+      transform: translateX(-210px);
+    }
+    body.sidebar-collapsed .main {
+      margin-left: 0;
+    }
+    body.sidebar-collapsed .sidebar-toggle-open {
+      display: flex;
+    }
 
     .nav-label {
       font-size: 10px;
@@ -291,7 +341,12 @@
     }
 
     /* ── Main ── */
-    .main { margin-left: 210px; flex: 1; overflow-y: auto; }
+    .main { 
+      margin-left: 210px; 
+      flex: 1; 
+      overflow-y: auto; 
+      transition: margin-left 0.2s ease;
+    }
     .section { display: none; padding: 2rem; }
     .section.active { display: block; }
 
@@ -328,8 +383,7 @@
       overflow: hidden;
       margin-bottom: 1.25rem;
       position: relative;
-      /* ▼ 追加：プレイヤーが横に広がりすぎるのを防ぎ、中央に寄せる */
-      max-width: 800px; 
+      max-width: 800px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -793,6 +847,10 @@
 </head>
 <body>
 
+  <button class="sidebar-toggle-open" id="openSidebarBtn" onclick="toggleSidebar()" title="メニューを開く">
+    <i class="ti ti-menu-2"></i>
+  </button>
+
   <div id="authOverlay">
     <div class="auth-box">
       <div class="auth-logo"><div class="auth-logo-dot"></div>Music App</div>
@@ -849,7 +907,14 @@
   </div>
 
   <nav class="sidebar">
-    <div class="logo"><div class="logo-dot"></div>Music App</div>
+    <div class="logo" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="logo-dot"></div>Music App
+      </div>
+      <button class="sidebar-toggle-close" onclick="toggleSidebar()" title="メニューを閉じる">
+        <i class="ti ti-chevron-left"></i>
+      </button>
+    </div>
 
     <div class="user-bar" id="userBar" style="display:none">
       <div class="user-avatar-wrap" onclick="openMyProfile()">
@@ -1054,7 +1119,7 @@
     let currentUser  = null;
     let allVideos    = [];
     let currentSort  = 'favorite';
-    let shuffledVideos = []; // シャッフルした楽曲順のキャッシュ
+    let shuffledVideos = [];
     let currentVideoId = null;
     let currentTitle   = '';
     let favorites    = new Set();
@@ -1160,6 +1225,18 @@
 
     window.openAuthOverlay  = () => document.getElementById('authOverlay').classList.add('visible');
     window.closeAuthOverlay = () => document.getElementById('authOverlay').classList.remove('visible');
+
+    // サイドバーの開閉処理（localStorageに状態を記憶）
+    window.toggleSidebar = () => {
+      const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+      localStorage.setItem('musicapp:sidebar-collapsed', isCollapsed ? 'true' : 'false');
+      window.dispatchEvent(new Event('resize'));
+    };
+
+    // 初期化時に前回の開閉状態を復元
+    if (localStorage.getItem('musicapp:sidebar-collapsed') === 'true') {
+      document.body.classList.add('sidebar-collapsed');
+    }
 
     // ── プロフィール用関数群 ──
     window.openMyProfile = () => {
@@ -1772,14 +1849,14 @@
           } else {
             mainPendingVideoId = videoId;
             mainPlayer = new YT.Player('mainIframe', {
-            videoId,
-            playerVars: { 
-              autoplay: 1, 
-              rel: 0,
-              controls: 1, // コントロールを表示し、マウスが離れたら自動で隠す
-              modestbranding: 1 // YouTubeロゴを控えめにする
-            },
-            events: {
+              videoId,
+              playerVars: { 
+                autoplay: 1, 
+                rel: 0,
+                controls: 1,
+                modestbranding: 1
+              },
+              events: {
                 onReady: (e) => {
                   mainPlayerReady = true;
                   if (mainPendingVideoId && mainPendingVideoId !== videoId) { e.target.loadVideoById(mainPendingVideoId); } else { e.target.playVideo(); }
@@ -1798,7 +1875,13 @@
             pipPendingVideoId = videoId;
             pipPlayer = new YT.Player('pipIframe', {
               videoId,
-              playerVars: { autoplay: 1, rel: 0, start: Math.floor(seekTime) },
+              playerVars: { 
+                autoplay: 1, 
+                rel: 0, 
+                start: Math.floor(seekTime),
+                controls: 1,
+                modestbranding: 1
+              },
               events: {
                 onReady: (e) => {
                   pipPlayerReady = true;
@@ -1841,7 +1924,6 @@
       if (e.data === YT.PlayerState.PLAYING) { 
         startWatchTimer(); 
       } else if (e.data === YT.PlayerState.ENDED) {
-        // 曲が終了したら自動的に次の曲へ
         flushWatchTime();
         playNextVideo(); 
       } else { 
@@ -1978,7 +2060,13 @@
           pipPendingVideoId = videoId;
           pipPlayer = new YT.Player('pipIframe', {
             videoId,
-            playerVars: { autoplay: 1, rel: 0, start: Math.floor(seekTime) },
+            playerVars: { 
+              autoplay: 1, 
+              rel: 0, 
+              start: Math.floor(seekTime),
+              controls: 1,
+              modestbranding: 1
+            },
             events: {
               onReady: (e) => {
                 pipPlayerReady = true;
@@ -2010,7 +2098,13 @@
           mainPendingVideoId = videoId;
           mainPlayer = new YT.Player('mainIframe', {
             videoId,
-            playerVars: { autoplay: 1, rel: 0, start: Math.floor(seekTime) },
+            playerVars: { 
+              autoplay: 1, 
+              rel: 0, 
+              start: Math.floor(seekTime),
+              controls: 1,
+              modestbranding: 1
+            },
             events: {
               onReady: (e) => {
                 mainPlayerReady = true;
