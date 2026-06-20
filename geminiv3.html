@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music App</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0D0D14;
+      --surface: #14141F;
+      --surface2: #1C1C2E;
+      --surface3: #24243A;
+      --accent: #7C3AED;
+      --accent-light: #9F6BFF;
+      --text-primary: #E8E0FF;
+      --text-secondary: #9B92C8;
+      --text-muted: #5A5480;
+      --border: #2A2A45;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── Auth overlay ── */
+    #authOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    #authOverlay.visible { display: flex; }
+
+    .auth-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      width: 340px;
+      text-align: center;
+    }
+
+    .auth-logo {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .auth-logo-dot { width: 8px; height: 8px; background: var(--accent-light); border-radius: 50%; }
+
+    .auth-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .google-btn:hover { border-color: var(--accent-light); background: var(--surface3); }
+    .google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    .auth-skip-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-family: var(--font-body);
+      cursor: pointer;
+      margin-top: 1rem;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .auth-skip-btn:hover { color: var(--text-secondary); }
+
+    /* ── Header user info ── */
+    .user-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 1.25rem 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.75rem;
+    }
+
+    .user-avatar-wrap {
+      position: relative;
+      cursor: pointer;
+    }
+    .user-avatar-wrap:hover::after {
+      content: '編集';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      border-radius: 50%;
+      font-size: 9px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--surface3);
+      display: block;
+    }
+
+    .user-name {
+      font-size: 12px;
+      color: var(--text-secondary);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    .user-name:hover { color: var(--text-primary); }
+
+    .user-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .user-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 15px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .user-btn:hover { color: var(--text-primary); }
+
+    .guest-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 1.25rem 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.75rem;
+    }
+
+    .guest-text {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .guest-login-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent-light);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: border-color 0.12s;
+      flex-shrink: 0;
+    }
+
+    .guest-login-btn:hover { border-color: var(--accent-light); }
+    .guest-login-btn i { font-size: 13px; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 210px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      padding: 1.5rem 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 600;
+      padding: 0 1.25rem 1.25rem;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-dot { width: 7px; height: 7px; background: var(--accent-light); border-radius: 50%; }
+
+    .nav-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0 1.25rem 0.4rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.55rem 1.25rem;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: all 0.12s;
+    }
+
+    .nav-item:hover { color: var(--text-primary); background: var(--surface2); }
+    .nav-item.active {
+      color: var(--accent-light);
+      border-left-color: var(--accent-light);
+      background: rgba(124,58,237,0.08);
+    }
+    .nav-item i { font-size: 16px; }
+
+    .player-bar {
+      margin-top: auto;
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .pb-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+
+    .pb-placeholder {
+      height: 36px;
+      background: var(--surface2);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ── Main ── */
+    .main { margin-left: 210px; flex: 1; overflow-y: auto; }
+    .section { display: none; padding: 2rem; }
+    .section.active { display: block; }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.2rem;
+    }
+
+    .page-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    .ph {
+      background: var(--surface2);
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    /* ── Video Player ── */
+    #playerWrap {
+      display: none;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+      position: relative;
+      /* ▼ 追加：プレイヤーが横に広がりすぎるのを防ぎ、中央に寄せる */
+      max-width: 800px; 
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #playerWrap.visible { display: block; }
+
+    #playerWrap iframe {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: none;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+
+    .player-now {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: calc(100% - 100px);
+    }
+
+    .player-btns { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .ctrl-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-family: var(--font-body);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.12s;
+    }
+
+    .ctrl-btn:hover { color: var(--text-primary); border-color: var(--accent-light); }
+    .ctrl-btn i { font-size: 14px; }
+
+    /* ── PiP ── */
+    #pipWrap {
+      display: none;
+      position: fixed;
+      bottom: 24px; right: 24px;
+      width: 320px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      z-index: 200;
+      cursor: move;
+      user-select: none;
+    }
+
+    #pipWrap.visible { display: block; }
+
+    #pipWrap iframe {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: none;
+      pointer-events: none;
+    }
+
+    #pipWrap.dragging iframe { pointer-events: none; }
+
+    .pip-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+
+    .pip-title {
+      font-size: 11px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: calc(100% - 60px);
+    }
+
+    .pip-btns { display: flex; gap: 4px; flex-shrink: 0; }
+
+    .pip-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 4px;
+      line-height: 1;
+    }
+
+    .pip-btn:hover { color: var(--text-primary); }
+
+    /* ── Search & Sort ── */
+    .search-ph { height: 40px; margin-bottom: 1rem; }
+    .sort-bar { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+
+    .sort-btn {
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: all 0.12s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sort-btn:hover { border-color: var(--accent-light); color: var(--text-primary); }
+    .sort-btn.active {
+      border-color: var(--accent-light);
+      color: var(--accent-light);
+      background: rgba(124,58,237,0.1);
+    }
+
+    /* ── Song List ── */
+    .song-list { display: flex; flex-direction: column; gap: 4px; }
+
+    .song-row {
+      display: grid;
+      grid-template-columns: 36px 56px 1fr 32px 60px;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .song-row:hover { background: var(--surface2); }
+    .song-row.playing { background: rgba(124,58,237,0.1); }
+
+    .song-num {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      text-align: center;
+    }
+
+    .song-row.playing .song-num { color: var(--accent-light); }
+
+    .song-thumb {
+      width: 56px; height: 40px;
+      border-radius: 4px;
+      object-fit: cover;
+      background: var(--surface3);
+      display: block;
+    }
+
+    .song-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .song-heart {
+      font-size: 16px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.12s;
+      text-align: center;
+    }
+
+    .song-heart:hover, .song-heart.liked { color: #F472B6; }
+
+    .song-duration {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      text-align: right;
+    }
+
+    .list-header {
+      display: grid;
+      grid-template-columns: 36px 56px 1fr 32px 60px;
+      gap: 12px;
+      padding: 0 10px 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+
+    /* ランキング用のテーブルヘッダー（4カラム構成） */
+    .rank-list-header {
+      display: grid;
+      grid-template-columns: 50px 40px 1fr 140px;
+      gap: 12px;
+      padding: 0 10px 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+
+    /* ランキング用の行デザイン */
+    .rank-row {
+      display: grid;
+      grid-template-columns: 50px 40px 1fr 140px;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      border-bottom: 1px solid rgba(42,42,69,0.3);
+    }
+    .rank-clickable {
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .rank-clickable:hover {
+      background: var(--surface2);
+    }
+
+    .rank-badge {
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      text-align: center;
+    }
+    .rank-badge.top1 { color: #FBBF24; font-size: 16px; }
+    .rank-badge.top2 { color: #9CA3AF; font-size: 15px; }
+    .rank-badge.top3 { color: #D97706; font-size: 15px; }
+    
+    .rank-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--surface3);
+    }
+    .rank-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .rank-time { font-size: 13px; font-family: var(--font-mono); text-align: right; color: var(--accent-light); font-weight: 600; }
+
+    .th {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .state-box {
+      padding: 3rem 1rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* ── Other sections ── */
+    .lyric-search { display: flex; gap: 10px; margin-bottom: 1.25rem; }
+    .lyric-input-ph { height: 44px; border-radius: 10px; flex: 1; }
+    .lyric-btn-ph { height: 44px; width: 80px; border-radius: 10px; }
+
+    .stats-grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* 再生履歴リスト ── */
+    .history-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+
+    .history-thumb {
+      width: 48px; height: 34px;
+      border-radius: 4px;
+      object-fit: cover;
+      background: var(--surface3);
+      flex-shrink: 0;
+    }
+
+    .history-info { flex: 1; min-width: 0; }
+    .history-title { font-size: 13px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── プロフィール用モーダル ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.visible { display: flex; }
+
+    .profile-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 360px;
+      position: relative;
+    }
+
+    .profile-close {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .profile-close:hover { color: var(--text-primary); }
+
+    .profile-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .profile-avatar-large {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--surface3);
+      border: 2px solid var(--accent);
+    }
+
+    .profile-name-large {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .profile-form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .profile-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+      display: block;
+    }
+
+    .profile-input, .profile-textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      padding: 0.6rem 0.8rem;
+      font-family: var(--font-body);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .profile-input:focus, .profile-textarea:focus {
+      border-color: var(--accent-light);
+    }
+    .profile-textarea {
+      resize: none;
+      height: 70px;
+    }
+
+    .profile-save-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.7rem;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .profile-save-btn:hover { background: var(--accent-light); }
+
+    .profile-bio-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      background: var(--surface2);
+      padding: 0.75rem;
+      border-radius: 8px;
+      min-height: 40px;
+      border: 1px solid var(--border);
+    }
+    .x-link-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: #fff;
+      color: #000;
+      border-radius: 8px;
+      padding: 0.6rem;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .x-link-btn:hover { opacity: 0.85; }
+    .no-x-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="authOverlay">
+    <div class="auth-box">
+      <div class="auth-logo"><div class="auth-logo-dot"></div>Music App</div>
+      <div class="auth-sub">Googleアカウントでログインして<br>あなたの音楽データを保存しましょう</div>
+      <button class="google-btn" onclick="signInWithGoogle()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Googleでログイン
+      </button>
+      <button class="auth-skip-btn" onclick="closeAuthOverlay()">ログインせずに使う</button>
+    </div>
+  </div>
+
+  <div id="myProfileModal" class="modal-overlay">
+    <div class="profile-box">
+      <button class="profile-close" onclick="closeMyProfile()"><i class="ti ti-x"></i></button>
+      <div class="profile-header">
+        <img class="profile-avatar-large" id="mpAvatar" src="" alt="">
+        <div class="profile-name-large" id="mpName">—</div>
+      </div>
+      <div class="profile-form-group">
+        <label class="profile-label">ユーザー名</label>
+        <input type="text" class="profile-input" id="mpInputName" placeholder="新しい名前を入力">
+      </div>
+      <div class="profile-form-group">
+        <label class="profile-label">自己紹介 (Bio)</label>
+        <textarea class="profile-textarea" id="mpInputBio" placeholder="自己紹介やメッセージを記入してください"></textarea>
+      </div>
+      <div class="profile-form-group">
+        <label class="profile-label">X (旧Twitter) のURL</label>
+        <input type="url" class="profile-input" id="mpInputX" placeholder="https://x.com/username">
+      </div>
+      <button class="profile-save-btn" onclick="saveMyProfile()">プロフィールを保存</button>
+    </div>
+  </div>
+
+  <div id="userProfileModal" class="modal-overlay">
+    <div class="profile-box">
+      <button class="profile-close" onclick="closeUserProfile()"><i class="ti ti-x"></i></button>
+      <div class="profile-header">
+        <img class="profile-avatar-large" id="upAvatar" src="" alt="">
+        <div class="profile-name-large" id="upName">—</div>
+      </div>
+      <div class="profile-form-group">
+        <label class="profile-label">自己紹介 (Bio)</label>
+        <div class="profile-bio-text" id="upBio">まだ自己紹介が書かれていません。</div>
+      </div>
+      <div class="profile-form-group" id="upXContainer"></div>
+    </div>
+  </div>
+
+  <nav class="sidebar">
+    <div class="logo"><div class="logo-dot"></div>Music App</div>
+
+    <div class="user-bar" id="userBar" style="display:none">
+      <div class="user-avatar-wrap" onclick="openMyProfile()">
+        <img class="user-avatar" id="userAvatar" src="" alt="">
+      </div>
+      <div class="user-name" id="userName" onclick="openMyProfile()">—</div>
+      <div class="user-actions">
+        <button class="user-btn" onclick="openMyProfile()" title="プロフィール編集"><i class="ti ti-settings"></i></button>
+        <button class="user-btn" onclick="signOut()" title="ログアウト"><i class="ti ti-logout"></i></button>
+      </div>
+    </div>
+
+    <div class="guest-bar" id="guestBar">
+      <div class="guest-text">ゲストとして利用中</div>
+      <button class="guest-login-btn" onclick="openAuthOverlay()">
+        <i class="ti ti-login"></i>ログイン
+      </button>
+    </div>
+
+    <div class="nav-label">メニュー</div>
+    <div class="nav-item active" onclick="switchTab('songs', this)"><i class="ti ti-music"></i>楽曲一覧</div>
+    <div class="nav-item" onclick="switchTab('lyric', this)"><i class="ti ti-file-text"></i>Lyric to Song</div>
+    <div class="nav-item" onclick="switchTab('mylist', this)"><i class="ti ti-playlist"></i>マイリスト</div>
+    <div class="nav-item" onclick="switchTab('ranking', this)"><i class="ti ti-trophy"></i>ランキング</div>
+    <div class="nav-item" onclick="switchTab('stats', this)"><i class="ti ti-chart-bar"></i>My Stats</div>
+    <div class="player-bar">
+      <div class="pb-label">再生中</div>
+      <div class="pb-placeholder">再生情報</div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <div id="songs" class="section active">
+      <div class="page-title">楽曲一覧</div>
+      <div class="page-sub">ライブラリの全楽曲</div>
+
+      <div id="playerWrap">
+        <div id="mainIframe"></div>
+        <div class="player-controls">
+          <div class="player-now" id="playerNowTitle">—</div>
+          <div class="player-btns">
+            <button class="ctrl-btn" onclick="enterPiP()"><i class="ti ti-layout-bottombar"></i>PiP</button>
+            <button class="ctrl-btn" onclick="closePlayer()"><i class="ti ti-x"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ph search-ph">検索バー</div>
+      <div class="sort-bar">
+        <button class="sort-btn active" onclick="setSort('favorite', this)">お気に入り</button>
+        <button class="sort-btn" onclick="setSort('newest', this)">新しい順</button>
+        <button class="sort-btn" onclick="setSort('oldest', this)">古い順</button>
+        <button class="sort-btn" onclick="setSort('shuffle', this)"><i class="ti ti-arrows-shuffle" style="font-size:13px;"></i>シャッフル</button>
+      </div>
+      <div class="list-header">
+        <div class="th">#</div>
+        <div class="th"></div>
+        <div class="th">楽曲名</div>
+        <div class="th"></div>
+        <div class="th">時間</div>
+      </div>
+      <div class="song-list" id="songList">
+        <div class="state-box">読み込み中...</div>
+      </div>
+    </div>
+
+    <div id="lyric" class="section">
+      <div class="page-title">Lyric to Song</div>
+      <div class="page-sub">歌詞から楽曲を検索・表示</div>
+      <div class="lyric-search">
+        <div class="ph lyric-input-ph">歌詞入力フィールド</div>
+        <div class="ph lyric-btn-ph">検索</div>
+      </div>
+      <div class="ph" style="height:220px;border-radius:12px">検索結果 / 歌詞表示エリア</div>
+    </div>
+
+    <div id="mylist" class="section">
+      <div class="page-title">マイリスト</div>
+      <div class="page-sub" id="mylistSub">お気に入りに追加した楽曲</div>
+      <div class="list-header">
+        <div class="th">#</div>
+        <div class="th"></div>
+        <div class="th">楽曲名</div>
+        <div class="th"></div>
+        <div class="th">時間</div>
+      </div>
+      <div class="song-list" id="myList">
+        <div class="state-box">ハートマークをクリックして楽曲を追加しましょう</div>
+      </div>
+    </div>
+
+    <div id="ranking" class="section">
+      <div class="page-title">総再生時間ランキング</div>
+      <div class="page-sub" id="rankingSub">ページを開いた時点のリアルタイムランキング</div>
+      <div class="rank-list-header">
+        <div class="th" style="text-align: center;">順位</div>
+        <div class="th"></div>
+        <div class="th">ユーザー</div>
+        <div class="th" style="text-align: right;">総再生時間</div>
+      </div>
+      <div class="song-list" id="rankingList">
+        <div class="state-box">ランキングデータを読み込み中...</div>
+      </div>
+    </div>
+
+    <div id="stats" class="section">
+      <div class="page-title">My Stats</div>
+      <div class="page-sub">あなたの再生統計</div>
+      
+      <div class="stats-grid-5">
+        <div class="stat-card">
+          <div class="stat-label">今日の再生時間</div>
+          <div class="stat-value" id="statTodayTime">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">総再生数</div>
+          <div class="stat-value" id="statTotal">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">総再生時間</div>
+          <div class="stat-value" id="statTime">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">お気に入り数</div>
+          <div class="stat-value" id="statFavs">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">ユニーク曲数</div>
+          <div class="stat-value" id="statUniq">—</div>
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem;font-weight:600;">再生履歴</div>
+      <div id="historyList" class="song-list">
+        <div class="state-box">まだ再生履歴がありません</div>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="pipWrap">
+    <div id="pipIframe"></div>
+    <div class="pip-bar">
+      <div class="pip-title" id="pipTitle">—</div>
+      <div class="pip-btns">
+        <button class="pip-btn" onclick="exitPiP()" title="通常表示に戻す"><i class="ti ti-layout-navbar"></i></button>
+        <button class="pip-btn" onclick="closePiP()" title="閉じる"><i class="ti ti-x"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    function onYouTubeIframeAPIReady() {
+      window.dispatchEvent(new Event('ytapiready'));
+    }
+  </script>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut as fbSignOut,
+      onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import {
+      getFirestore,
+      doc,
+      collection,
+      getDoc,
+      getDocs,
+      setDoc,
+      addDoc,
+      arrayUnion,
+      arrayRemove,
+      increment,
+      serverTimestamp,
+      orderBy,
+      limit,
+      query,
+      where
+    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    const FIREBASE_CONFIG = {
+      apiKey:            'AIzaSyBQ4wEB7G1yL8VpkNGCgFaZMDbqHqJbcU8',
+      authDomain:        'webesoragoto.firebaseapp.com',
+      projectId:         'webesoragoto',
+      storageBucket:     'webesoragoto.firebasestorage.app',
+      messagingSenderId: '1043202498267',
+      appId:             '1:1043202498267:web:d5d4eb8bd354ded781b6fe',
+    };
+
+    const YOUTUBE_API_KEY = 'AIzaSyBIGXJYHphhHYecrJ4tOzhG10rV7Vi8cbU';
+
+    const app  = initializeApp(FIREBASE_CONFIG);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    let currentUser  = null;
+    let allVideos    = [];
+    let currentSort  = 'favorite';
+    let shuffledVideos = []; // シャッフルした楽曲順のキャッシュ
+    let currentVideoId = null;
+    let currentTitle   = '';
+    let favorites    = new Set();
+    let accountStorageAvailable = true;
+
+    let mainPlayer = null;
+    let pipPlayer  = null;
+    let activePlayer = null;
+    let watchTimerInterval = null;
+    let lastTickTime = null;
+    let ytApiReady = false;
+    let ytApiReadyCallbacks = [];
+
+    let mainPlayerReady = false;
+    let pipPlayerReady  = false;
+    let mainPendingVideoId = null;
+    let pipPendingVideoId  = null;
+
+    if (window.YT && window.YT.Player) {
+      ytApiReady = true;
+    } else {
+      window.addEventListener('ytapiready', () => {
+        ytApiReady = true;
+        ytApiReadyCallbacks.forEach(cb => cb());
+        ytApiReadyCallbacks = [];
+      });
+    }
+
+    function whenYTApiReady(cb) {
+      if (ytApiReady) cb();
+      else ytApiReadyCallbacks.push(cb);
+    }
+
+    let localStats = {
+      playCount: 0,
+      totalPlaySeconds: 0,
+      dailyStats: {},
+    };
+    let localHistory = [];
+    let myProfileData = { bio: '', xUrl: '' };
+
+    const DAILY_STATS_RETENTION_DAYS = 14;
+    const localStorageKey = (uid) => `musicapp:stats:${uid}`;
+
+    function saveStatsToLocalStorage(uid) {
+      if (!uid) return;
+      try {
+        localStorage.setItem(localStorageKey(uid), JSON.stringify({
+          playCount: localStats.playCount,
+          totalPlaySeconds: localStats.totalPlaySeconds,
+          dailyStats: localStats.dailyStats,
+          savedAt: Date.now(),
+        }));
+      } catch (err) {
+        console.warn('localStorageへの保存に失敗しました:', err);
+      }
+    }
+
+    function loadStatsFromLocalStorage(uid) {
+      if (!uid) return null;
+      try {
+        const raw = localStorage.getItem(localStorageKey(uid));
+        return raw ? JSON.parse(raw) : null;
+      } catch (err) {
+        console.warn('localStorageからの読み込みに失敗しました:', err);
+        return null;
+      }
+    }
+
+    function pruneDailyStats(dailyStats) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - DAILY_STATS_RETENTION_DAYS);
+      const cutoffKey = getJSTDateKey(cutoff);
+      const pruned = {};
+      for (const [key, seconds] of Object.entries(dailyStats)) {
+        if (key >= cutoffKey) pruned[key] = seconds;
+      }
+      return pruned;
+    }
+
+    function mergeDailyStats(a = {}, b = {}) {
+      const merged = { ...a };
+      for (const [key, seconds] of Object.entries(b)) {
+        merged[key] = Math.max(merged[key] || 0, seconds || 0);
+      }
+      return pruneDailyStats(merged);
+    }
+
+    const userRef = (uid = currentUser?.uid) => doc(db, 'users', uid);
+
+    window.signInWithGoogle = async () => {
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        alert('ログインに失敗しました: ' + e.message);
+      }
+    };
+
+    window.signOut = async () => {
+      await fbSignOut(auth);
+    };
+
+    window.openAuthOverlay  = () => document.getElementById('authOverlay').classList.add('visible');
+    window.closeAuthOverlay = () => document.getElementById('authOverlay').classList.remove('visible');
+
+    // ── プロフィール用関数群 ──
+    window.openMyProfile = () => {
+      if (!currentUser) return;
+      document.getElementById('mpAvatar').src = currentUser.photoURL || '';
+      document.getElementById('mpName').textContent = currentUser.displayName || 'ユーザー';
+      document.getElementById('mpInputName').value = currentUser.displayName || '';
+      document.getElementById('mpInputBio').value = myProfileData.bio || '';
+      document.getElementById('mpInputX').value = myProfileData.xUrl || '';
+      document.getElementById('myProfileModal').classList.add('visible');
+    };
+
+    window.closeMyProfile = () => {
+      document.getElementById('myProfileModal').classList.remove('visible');
+    };
+
+    window.saveMyProfile = async () => {
+      if (!currentUser) return;
+      const newName = document.getElementById('mpInputName').value.trim();
+      const newBio = document.getElementById('mpInputBio').value.trim();
+      const newXUrl = document.getElementById('mpInputX').value.trim();
+
+      if (!newName) {
+        alert('ユーザー名を入力してください');
+        return;
+      }
+
+      try {
+        await setDoc(userRef(), {
+          displayName: newName,
+          bio: newBio,
+          xUrl: newXUrl
+        }, { merge: true });
+
+        currentUser.displayName = newName;
+        myProfileData.bio = newBio;
+        myProfileData.xUrl = newXUrl;
+        document.getElementById('userName').textContent = newName;
+
+        closeMyProfile();
+        alert('プロフィールを保存しました。');
+        
+        if (document.getElementById('ranking').classList.contains('active')) {
+          fetchAndRenderRanking();
+        }
+      } catch (err) {
+        console.error('プロフィールの保存に失敗しました:', err);
+        alert('保存に失敗しました。ルールの設定等を確認してください。');
+      }
+    };
+
+    window.openUserProfile = async (userId) => {
+      const defAvatar = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%235A5480" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+      document.getElementById('upAvatar').src = defAvatar;
+      document.getElementById('upName').textContent = '読み込み中...';
+      document.getElementById('upBio').textContent = 'データを取得中...';
+      document.getElementById('upXContainer').innerHTML = '';
+      document.getElementById('userProfileModal').classList.add('visible');
+
+      try {
+        const snap = await getDoc(doc(db, 'users', userId));
+        if (snap.exists()) {
+          const data = snap.data();
+          document.getElementById('upAvatar').src = data.photoURL || defAvatar;
+          document.getElementById('upName').textContent = data.displayName || 'ゲストユーザー';
+          document.getElementById('upBio').textContent = data.bio || 'まだ自己紹介が書かれていません。';
+          
+          if (data.xUrl && data.xUrl.startsWith('http')) {
+            document.getElementById('upXContainer').innerHTML = `
+              <a href="${escHtml(data.xUrl)}" target="_blank" class="x-link-btn">
+                <i class="ti ti-brand-x"></i> X (旧Twitter) を見る
+              </a>
+            `;
+          } else {
+            document.getElementById('upXContainer').innerHTML = '<div class="no-x-text">X のアカウントは連携されていません</div>';
+          }
+        } else {
+          document.getElementById('upName').textContent = '不明なユーザー';
+          document.getElementById('upBio').textContent = 'ユーザーデータが見つかりませんでした。';
+        }
+      } catch (err) {
+        console.error('ユーザー情報の取得に失敗しました:', err);
+        document.getElementById('upName').textContent = 'エラー';
+        document.getElementById('upBio').textContent = '情報の読み込みに失敗しました。';
+      }
+    };
+
+    window.closeUserProfile = () => {
+      document.getElementById('userProfileModal').classList.remove('visible');
+    };
+
+    let initialized = false;
+
+    onAuthStateChanged(auth, async user => {
+      try {
+        if (user) {
+          currentUser = user;
+          document.getElementById('authOverlay').classList.remove('visible');
+          document.getElementById('userBar').style.display = 'flex';
+          document.getElementById('guestBar').style.display = 'none';
+          document.getElementById('userAvatar').src = user.photoURL || '';
+          document.getElementById('userName').textContent = user.displayName || user.email;
+
+          const cached = loadStatsFromLocalStorage(user.uid);
+          if (cached) {
+            localStats.playCount        = cached.playCount || 0;
+            localStats.totalPlaySeconds = cached.totalPlaySeconds || 0;
+            localStats.dailyStats       = pruneDailyStats(cached.dailyStats || {});
+            renderStatsFromLocal();
+          }
+
+          await loadUserData(user);
+        } else {
+          currentUser = null;
+          favorites = new Set();
+          localStats = { playCount: 0, totalPlaySeconds: 0, dailyStats: {} };
+          localHistory = [];
+          myProfileData = { bio: '', xUrl: '' };
+          document.getElementById('userBar').style.display = 'none';
+          document.getElementById('guestBar').style.display = 'flex';
+        }
+      } catch (err) {
+        if (isPermissionError(err)) {
+          accountStorageAvailable = false;
+        } else {
+          console.error('Failed to load account data:', err);
+        }
+        favorites = new Set();
+      } finally {
+        if (!initialized) {
+          initialized = true;
+          await fetchVideos();
+        } else {
+          renderList();
+          renderMyList();
+          renderStatsFromLocal();
+        }
+      }
+    });
+
+    async function loadUserData(user = currentUser) {
+      if (!user) return;
+      accountStorageAvailable = true;
+      const ref = userRef(user.uid);
+
+      try {
+        const snap = await getDoc(ref);
+
+        if (snap.exists()) {
+          const data = snap.data();
+          favorites = new Set(data.favorites || []);
+
+          localStats.playCount        = Math.max(localStats.playCount, data.playCount || 0);
+          localStats.totalPlaySeconds = Math.max(localStats.totalPlaySeconds, data.totalPlaySeconds || 0);
+          localStats.dailyStats       = mergeDailyStats(localStats.dailyStats, data.dailyStats || {});
+          
+          myProfileData.bio = data.bio || '';
+          myProfileData.xUrl = data.xUrl || '';
+          if (data.displayName) {
+            document.getElementById('userName').textContent = data.displayName;
+            currentUser.displayName = data.displayName;
+          }
+
+          saveStatsToLocalStorage(user.uid);
+          setDoc(ref, {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: data.displayName || user.displayName || '',
+            photoURL: user.photoURL || '',
+            lastLoginAt: serverTimestamp(),
+            playCount: localStats.playCount,
+            totalPlaySeconds: localStats.totalPlaySeconds,
+            dailyStats: localStats.dailyStats,
+          }, { merge: true }).catch(err => {
+            if (isPermissionError(err)) accountStorageAvailable = false;
+          });
+        } else {
+          await setDoc(ref, {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName || '',
+            photoURL: user.photoURL || '',
+            favorites: [],
+            playCount: localStats.playCount,
+            totalPlaySeconds: localStats.totalPlaySeconds,
+            dailyStats: localStats.dailyStats,
+            bio: '',
+            xUrl: '',
+            createdAt: serverTimestamp(),
+            lastLoginAt: serverTimestamp(),
+          });
+          favorites = new Set();
+          saveStatsToLocalStorage(user.uid);
+        }
+      } catch (err) {
+        if (isPermissionError(err)) {
+          accountStorageAvailable = false;
+        } else {
+          throw err;
+        }
+      }
+
+      renderStatsFromLocal();
+      await loadHistoryToCache(user.uid);
+    }
+
+    async function loadHistoryToCache(uid) {
+      try {
+        const historyRef = collection(db, 'users', uid, 'history');
+        const q = query(historyRef, orderBy('playedAt', 'desc'), limit(20));
+        const histSnap = await getDocs(q);
+        localHistory = histSnap.docs.map(d => d.data());
+      } catch (err) {
+        if (isPermissionError(err)) {
+          accountStorageAvailable = false;
+        }
+        localHistory = [];
+      }
+    }
+
+    function isPermissionError(err) {
+      return err?.code === 'permission-denied' || String(err?.message || '').includes('insufficient permissions');
+    }
+
+    function showAccountStorageWarning() {
+      const histEl = document.getElementById('historyList');
+      const warning = '<div class="state-box">Firestoreの権限設定により、現在この端末のデータのみで表示しています。</div>';
+      if (!histEl.innerHTML.includes('Firestoreの権限設定')) {
+        histEl.innerHTML = warning + histEl.innerHTML;
+      }
+    }
+
+    async function fetchVideoIds() {
+      const snap = await getDoc(doc(db, 'config', 'videoIds'));
+      if (snap.exists() && Array.isArray(snap.data().ids)) {
+        return snap.data().ids.map(normalizeVideoId).filter(Boolean);
+      }
+      console.warn('config/videoIds が見つかりません。');
+      return [];
+    }
+
+    function normalizeVideoId(value) {
+      const raw = typeof value === 'string' ? value : value?.id || value?.videoId || value?.url || '';
+      const text = String(raw).trim();
+      if (!text) return '';
+
+      const direct = text.match(/^[a-zA-Z0-9_-]{11}$/);
+      if (direct) return direct[0];
+
+      const fromUrl = text.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([a-zA-Z0-9_-]{11})/);
+      if (fromUrl) return fromUrl[1];
+
+      const anywhere = text.match(/[a-zA-Z0-9_-]{11}/);
+      return anywhere ? anywhere[0] : '';
+    }
+
+    async function fetchVideos() {
+      const list = document.getElementById('songList');
+      list.innerHTML = '<div class="state-box">読み込み中...</div>';
+      try {
+        const videoIds = [...new Set(await fetchVideoIds())];
+
+        if (!videoIds.length) {
+          list.innerHTML = '<div class="state-box">楽曲データがまだ登録されていません。</div>';
+          return;
+        }
+
+        const items = [];
+        for (let i = 0; i < videoIds.length; i += 50) {
+          const ids = videoIds.slice(i, i + 50).join(',');
+          const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${ids}&key=${YOUTUBE_API_KEY}`;
+          const res = await fetch(url);
+          if (!res.ok) {
+            const message = await res.text();
+            throw new Error(`YouTube API error: ${res.status} ${message}`);
+          }
+          const data = await res.json();
+          items.push(...(data.items || []));
+        }
+
+        allVideos = videoIds
+          .map(id => items.find(item => item.id === id))
+          .filter(Boolean)
+          .map(item => ({
+            id: item.id,
+            title: item.snippet.title,
+            thumb: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+            duration: parseDuration(item.contentDetails.duration),
+            durationSeconds: parseDurationSeconds(item.contentDetails.duration),
+            publishedAt: item.snippet.publishedAt,
+          }));
+
+        renderList();
+        renderMyList();
+        renderStatsFromLocal();
+      } catch (err) {
+        list.innerHTML = `<div class="state-box">エラー: ${err.message}</div>`;
+      }
+    }
+
+    function parseDuration(iso) {
+      const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      const h = parseInt(m[1] || 0);
+      const min = parseInt(m[2] || 0);
+      const sec = parseInt(m[3] || 0);
+      return `${h * 60 + min}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function parseDurationSeconds(iso) {
+      const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      const h = parseInt(m[1] || 0);
+      const min = parseInt(m[2] || 0);
+      const sec = parseInt(m[3] || 0);
+      return h * 3600 + min * 60 + sec;
+    }
+
+    function getJSTDateKey(d = new Date()) {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(d);
+    }
+
+    function formatHours(seconds) {
+      return (seconds / 3600).toFixed(1) + '時間';
+    }
+
+    function formatMinutesOrHours(seconds) {
+      const totalMinutes = Math.round(seconds / 60);
+      if (totalMinutes < 60) {
+        return totalMinutes + '分';
+      }
+      const hrs = Math.floor(totalMinutes / 60);
+      const mins = totalMinutes % 60;
+      return mins > 0 ? `${hrs}時間${mins}分` : `${hrs}時間`;
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function sortedVideos() {
+      const arr = [...allVideos];
+      if (currentSort === 'favorite') {
+        return arr.sort((a, b) => (favorites.has(b.id) ? 1 : 0) - (favorites.has(a.id) ? 1 : 0));
+      }
+      if (currentSort === 'newest') return arr.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+      if (currentSort === 'oldest') return arr.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
+      if (currentSort === 'shuffle') {
+        return shuffledVideos;
+      }
+      return arr;
+    }
+
+    function renderList() {
+      const list = document.getElementById('songList');
+      const videos = sortedVideos();
+      if (!videos.length) {
+        list.innerHTML = '<div class="state-box">動画が見つかりませんでした。</div>';
+        return;
+      }
+      list.innerHTML = videos.map((v, i) => `
+        <div class="song-row ${currentVideoId === v.id ? 'playing' : ''}" onclick="playVideo('${v.id}','${escHtml(v.title)}')">
+          <div class="song-num">${currentVideoId === v.id ? '▶' : i + 1}</div>
+          <img class="song-thumb" src="${v.thumb}" alt="" loading="lazy">
+          <div class="song-title">${escHtml(v.title)}</div>
+          <div class="song-heart ${favorites.has(v.id) ? 'liked' : ''}" onclick="toggleFav(event,'${v.id}')">
+            <i class="ti ti-heart"></i>
+          </div>
+          <div class="song-duration">${v.duration}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderMyList() {
+      const list = document.getElementById('myList');
+      const sub  = document.getElementById('mylistSub');
+
+      if (!currentUser) {
+        sub.textContent = 'お気に入りに追加した楽曲';
+        list.innerHTML = '<div class="state-box">ログインするとお気に入りを保存できます</div>';
+        return;
+      }
+
+      const liked = allVideos.filter(v => favorites.has(v.id));
+      sub.textContent = liked.length ? `お気に入りに追加した楽曲 · ${liked.length}曲` : 'お気に入りに追加した楽曲';
+
+      if (!liked.length) {
+        list.innerHTML = '<div class="state-box">ハートマークをクリックして楽曲を追加しましょう</div>';
+        return;
+      }
+
+      list.innerHTML = liked.map((v, i) => `
+        <div class="song-row ${currentVideoId === v.id ? 'playing' : ''}" onclick="playVideo('${v.id}','${escHtml(v.title)}')">
+          <div class="song-num">${currentVideoId === v.id ? '▶' : i + 1}</div>
+          <img class="song-thumb" src="${v.thumb}" alt="" loading="lazy">
+          <div class="song-title">${escHtml(v.title)}</div>
+          <div class="song-heart liked" onclick="toggleFav(event,'${v.id}')">
+            <i class="ti ti-heart"></i>
+          </div>
+          <div class="song-duration">${v.duration}</div>
+        </div>
+      `).join('');
+    }
+
+    async function fetchAndRenderRanking() {
+      const listEl = document.getElementById('rankingList');
+      listEl.innerHTML = '<div class="state-box">最新のランキングを集計中...</div>';
+
+      try {
+        const usersRef = collection(db, 'users');
+        const q = query(
+          usersRef,
+          where('totalPlaySeconds', '>', 0),
+          orderBy('totalPlaySeconds', 'desc'),
+          limit(100)
+        );
+        
+        const snap = await getDocs(q);
+        
+        if (snap.empty) {
+          listEl.innerHTML = '<div class="state-box">まだ再生データが存在しません。</div>';
+          return;
+        }
+
+        let rank = 1;
+        const rankingList = [];
+
+        snap.forEach(doc => {
+          const data = doc.data();
+          rankingList.push({
+            uid: doc.id,
+            rank: rank++,
+            displayName: data.displayName || 'ゲストユーザー',
+            photoURL: data.photoURL || '',
+            totalPlaySeconds: data.totalPlaySeconds || 0
+          });
+        });
+
+        listEl.innerHTML = rankingList.map(user => {
+          let rankClass = '';
+          if (user.rank === 1) rankClass = 'top1';
+          else if (user.rank === 2) rankClass = 'top2';
+          else if (user.rank === 3) rankClass = 'top3';
+
+          const avatarSrc = user.photoURL || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%235A5480" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+
+          return `
+            <div class="rank-row rank-clickable" onclick="openUserProfile('${user.uid}')">
+              <div class="rank-badge ${rankClass}">${user.rank}</div>
+              <img class="rank-avatar" src="${avatarSrc}" alt="">
+              <div class="rank-name">${escHtml(user.displayName)}</div>
+              <div class="rank-time">${formatMinutesOrHours(user.totalPlaySeconds)}</div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.error('ランキングのリアルタイム取得に失敗しました:', err);
+        if (err.message && err.message.includes('FAILED_PRECONDITION')) {
+          listEl.innerHTML = `<div class="state-box" style="color: #EA4335;">Firestoreのインデックス（索引）を作成する必要があります。ブラウザのデベロッパーコンソール（F12）に表示されているURLをクリックしてインデックスを作成してください。</div>`;
+        } else {
+          listEl.innerHTML = `<div class="state-box">データの読み込み中にエラーが発生しました。</div>`;
+        }
+      }
+    }
+
+    function renderStatsFromLocal() {
+      if (!currentUser) {
+        document.getElementById('statTodayTime').textContent = '—';
+        document.getElementById('statTotal').textContent = '—';
+        document.getElementById('statTime').textContent  = '—';
+        document.getElementById('statFavs').textContent  = '—';
+        document.getElementById('statUniq').textContent  = '—';
+        document.getElementById('historyList').innerHTML = '<div class="state-box">ログインすると再生統計が記録されます</div>';
+        return;
+      }
+
+      const uniqueIds = new Set(localHistory.map(h => h.id));
+      const todayKey = getJSTDateKey();
+      const todaySeconds = localStats.dailyStats[todayKey] || 0;
+
+      document.getElementById('statTodayTime').textContent = formatMinutesOrHours(todaySeconds);
+      document.getElementById('statTotal').textContent = localStats.playCount;
+      document.getElementById('statTime').textContent  = formatHours(localStats.totalPlaySeconds);
+      document.getElementById('statFavs').textContent  = favorites.size;
+      document.getElementById('statUniq').textContent  = uniqueIds.size;
+
+      renderHistoryList();
+
+      if (!accountStorageAvailable) {
+        showAccountStorageWarning();
+      }
+    }
+
+    function renderHistoryList() {
+      const histEl = document.getElementById('historyList');
+      if (!localHistory.length) {
+        histEl.innerHTML = '<div class="state-box">まだ再生履歴がありません</div>';
+        return;
+      }
+
+      histEl.innerHTML = localHistory.map(h => {
+        const video = allVideos.find(v => v.id === h.id);
+        if (!video) return '';
+        const date = h.playedAt?.toDate
+          ? h.playedAt.toDate().toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })
+          : (h.playedAt instanceof Date ? h.playedAt.toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—');
+        return `
+          <div class="history-row">
+            <img class="history-thumb" src="${video.thumb}" alt="">
+            <div class="history-info">
+              <div class="history-title">${escHtml(video.title)}</div>
+              <div class="history-time">${date}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.toggleFav = async (e, id) => {
+      e.stopPropagation();
+      if (!currentUser) { openAuthOverlay(); return; }
+      if (!accountStorageAvailable) { alert('Firestoreの権限設定により、お気に入りを保存できません。'); return; }
+
+      const wasLiked = favorites.has(id);
+      if (wasLiked) favorites.delete(id); else favorites.add(id);
+
+      try {
+        if (favorites.has(id)) {
+          await setDoc(userRef(), { favorites: arrayUnion(id) }, { merge: true });
+        } else {
+          await setDoc(userRef(), { favorites: arrayRemove(id) }, { merge: true });
+        }
+      } catch (err) {
+        if (wasLiked) favorites.add(id); else favorites.delete(id);
+        if (isPermissionError(err)) {
+          accountStorageAvailable = false;
+          alert('Firestoreの権限設定により、お気に入りを保存できません。');
+          renderStatsFromLocal();
+          return;
+        }
+        throw err;
+      }
+
+      renderList();
+      renderMyList();
+      renderStatsFromLocal();
+    };
+
+    window.playVideo = (videoId, title) => {
+      flushWatchTime();
+
+      currentVideoId = videoId;
+      currentTitle   = title;
+
+      const usePiP = document.getElementById('pipWrap').classList.contains('visible');
+
+      if (usePiP) {
+        document.getElementById('pipTitle').textContent = title;
+        createOrLoadPlayer('pip', videoId);
+      } else {
+        document.getElementById('playerNowTitle').textContent = title;
+        document.getElementById('playerWrap').classList.add('visible');
+        createOrLoadPlayer('main', videoId);
+      }
+
+      renderList();
+      renderMyList();
+
+      if (currentUser) {
+        localStats.playCount += 1;
+        saveStatsToLocalStorage(currentUser.uid);
+
+        const historyEntry = {
+          id: videoId,
+          title: title,
+          playedAt: new Date(),
+        };
+        localHistory = [historyEntry, ...localHistory].slice(0, 20);
+        renderStatsFromLocal();
+
+        try {
+          const historyRef = collection(db, 'users', currentUser.uid, 'history');
+          addDoc(historyRef, {
+            id: videoId,
+            title: title,
+            playedAt: serverTimestamp(),
+          }).catch(err => {
+            if (isPermissionError(err)) accountStorageAvailable = false;
+          });
+
+          setDoc(userRef(), { playCount: increment(1) }, { merge: true }).catch(err => {
+            if (isPermissionError(err)) {
+              accountStorageAvailable = false;
+              renderStatsFromLocal();
+            }
+          });
+        } catch (err) {
+          if (isPermissionError(err)) {
+            accountStorageAvailable = false;
+            renderStatsFromLocal();
+          }
+        }
+      }
+    };
+
+    function createOrLoadPlayer(target, videoId) {
+      whenYTApiReady(() => {
+        if (target === 'main') {
+          if (mainPlayer) {
+            if (mainPlayerReady) { mainPlayer.loadVideoById(videoId); } else { mainPendingVideoId = videoId; }
+          } else {
+            mainPendingVideoId = videoId;
+            mainPlayer = new YT.Player('mainIframe', {
+            videoId,
+            playerVars: { 
+              autoplay: 1, 
+              rel: 0,
+              controls: 1, // コントロールを表示し、マウスが離れたら自動で隠す
+              modestbranding: 1 // YouTubeロゴを控えめにする
+            },
+            events: {
+                onReady: (e) => {
+                  mainPlayerReady = true;
+                  if (mainPendingVideoId && mainPendingVideoId !== videoId) { e.target.loadVideoById(mainPendingVideoId); } else { e.target.playVideo(); }
+                  mainPendingVideoId = null;
+                },
+                onStateChange: (e) => onPlayerStateChange('main', e),
+              },
+            });
+          }
+          activePlayer = mainPlayer;
+        } else {
+          const seekTime = (mainPlayer && mainPlayerReady && mainPlayer.getCurrentTime) ? mainPlayer.getCurrentTime() : 0;
+          if (pipPlayer) {
+            if (pipPlayerReady) { pipPlayer.loadVideoById(videoId, seekTime); } else { pipPendingVideoId = videoId; }
+          } else {
+            pipPendingVideoId = videoId;
+            pipPlayer = new YT.Player('pipIframe', {
+              videoId,
+              playerVars: { autoplay: 1, rel: 0, start: Math.floor(seekTime) },
+              events: {
+                onReady: (e) => {
+                  pipPlayerReady = true;
+                  if (pipPendingVideoId && pipPendingVideoId !== videoId) { e.target.loadVideoById(pipPendingVideoId); } else { e.target.playVideo(); }
+                  pipPendingVideoId = null;
+                },
+                onStateChange: (e) => onPlayerStateChange('pip', e),
+              },
+            });
+          }
+          activePlayer = pipPlayer;
+        }
+      });
+    }
+
+    // 次の曲を自動再生する関数
+    function playNextVideo() {
+      if (!currentVideoId || allVideos.length === 0) return;
+
+      const currentList = sortedVideos();
+      const currentIndex = currentList.findIndex(v => v.id === currentVideoId);
+      
+      if (currentIndex !== -1) {
+        let nextIndex = currentIndex + 1;
+        
+        if (nextIndex >= currentList.length) {
+          nextIndex = 0;
+        }
+        
+        const nextVideo = currentList[nextIndex];
+        if (nextVideo) {
+          window.playVideo(nextVideo.id, nextVideo.title);
+        }
+      }
+    }
+
+    function onPlayerStateChange(target, e) {
+      if ((target === 'main' && activePlayer !== mainPlayer) || (target === 'pip'  && activePlayer !== pipPlayer)) return;
+      
+      if (e.data === YT.PlayerState.PLAYING) { 
+        startWatchTimer(); 
+      } else if (e.data === YT.PlayerState.ENDED) {
+        // 曲が終了したら自動的に次の曲へ
+        flushWatchTime();
+        playNextVideo(); 
+      } else { 
+        flushWatchTime(); 
+      }
+    }
+
+    function startWatchTimer() {
+      if (watchTimerInterval) return;
+      lastTickTime = Date.now();
+      watchTimerInterval = setInterval(() => { commitElapsedTime(); }, 1000);
+    }
+
+    function flushWatchTime() {
+      if (!watchTimerInterval) return;
+      clearInterval(watchTimerInterval);
+      watchTimerInterval = null;
+      commitElapsedTime();
+      lastTickTime = null;
+      flushPendingSecondsNow();
+    }
+
+    function commitElapsedTime() {
+      if (lastTickTime == null) return;
+      const now = Date.now();
+      const elapsedSec = (now - lastTickTime) / 1000;
+      lastTickTime = now;
+      accumulateWatchSeconds(elapsedSec);
+    }
+
+    let pendingFirestoreSeconds = 0;
+    let firestoreFlushTimer = null;
+    const FIRESTORE_FLUSH_INTERVAL_MS = 10000;
+
+    function accumulateWatchSeconds(elapsedSec) {
+      if (!currentUser || !currentVideoId) return;
+      if (!isFinite(elapsedSec) || elapsedSec <= 0) return;
+
+      const seconds = Math.min(elapsedSec, 300);
+      const dateKey = getJSTDateKey();
+
+      localStats.totalPlaySeconds += seconds;
+      localStats.dailyStats[dateKey] = (localStats.dailyStats[dateKey] || 0) + seconds;
+      localStats.dailyStats = pruneDailyStats(localStats.dailyStats);
+      renderStatsFromLocal();
+
+      saveStatsToLocalStorage(currentUser.uid);
+
+      pendingFirestoreSeconds += seconds;
+      scheduleFirestoreFlush(dateKey);
+    }
+
+    function scheduleFirestoreFlush(dateKey) {
+      if (firestoreFlushTimer) return;
+      firestoreFlushTimer = setTimeout(() => {
+        firestoreFlushTimer = null;
+        flushPendingSecondsToFirestore(dateKey);
+      }, FIRESTORE_FLUSH_INTERVAL_MS);
+    }
+
+    function flushPendingSecondsToFirestore(dateKey = getJSTDateKey()) {
+      if (!currentUser) { pendingFirestoreSeconds = 0; return; }
+      if (!accountStorageAvailable) { pendingFirestoreSeconds = 0; return; }
+      if (pendingFirestoreSeconds <= 0) return;
+
+      const seconds = pendingFirestoreSeconds;
+      pendingFirestoreSeconds = 0;
+
+      try {
+        setDoc(userRef(), {
+          totalPlaySeconds: increment(seconds),
+          [`dailyStats.${dateKey}`]: increment(seconds),
+        }, { merge: true }).catch(err => {
+          if (isPermissionError(err)) {
+            accountStorageAvailable = false;
+            renderStatsFromLocal();
+          } else {
+            pendingFirestoreSeconds += seconds;
+          }
+        });
+      } catch (err) {
+        if (isPermissionError(err)) {
+          accountStorageAvailable = false;
+          renderStatsFromLocal();
+        } else {
+          pendingFirestoreSeconds += seconds;
+        }
+      }
+    }
+
+    function flushPendingSecondsNow() {
+      if (firestoreFlushTimer) {
+        clearTimeout(firestoreFlushTimer);
+        firestoreFlushTimer = null;
+      }
+      flushPendingSecondsToFirestore();
+    }
+
+    window.addEventListener('beforeunload', () => {
+      commitElapsedTime();
+      flushPendingSecondsNow();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        commitElapsedTime();
+        flushPendingSecondsNow();
+      }
+    });
+
+    window.closePlayer = () => {
+      flushWatchTime();
+      if (mainPlayer && mainPlayerReady) mainPlayer.stopVideo();
+      mainPendingVideoId = null;
+      document.getElementById('playerWrap').classList.remove('visible');
+      currentVideoId = null;
+      activePlayer = null;
+      renderList();
+    };
+
+    window.enterPiP = () => {
+      if (!mainPlayer || !currentVideoId) return;
+      flushWatchTime();
+      const seekTime = (mainPlayerReady && mainPlayer.getCurrentTime) ? mainPlayer.getCurrentTime() : 0;
+      const videoId  = currentVideoId;
+
+      document.getElementById('pipTitle').textContent = currentTitle;
+      document.getElementById('pipWrap').classList.add('visible');
+      document.getElementById('playerWrap').classList.remove('visible');
+
+      whenYTApiReady(() => {
+        if (pipPlayer) {
+          if (pipPlayerReady) { pipPlayer.loadVideoById(videoId, seekTime); } else { pipPendingVideoId = videoId; }
+        } else {
+          pipPendingVideoId = videoId;
+          pipPlayer = new YT.Player('pipIframe', {
+            videoId,
+            playerVars: { autoplay: 1, rel: 0, start: Math.floor(seekTime) },
+            events: {
+              onReady: (e) => {
+                pipPlayerReady = true;
+                if (pipPendingVideoId && pipPendingVideoId !== videoId) { e.target.loadVideoById(pipPendingVideoId); } else { e.target.playVideo(); }
+                pipPendingVideoId = null;
+              },
+              onStateChange: (e) => onPlayerStateChange('pip', e),
+            },
+          });
+        }
+        activePlayer = pipPlayer;
+      });
+    };
+
+    window.exitPiP = () => {
+      if (!pipPlayer || !currentVideoId) return;
+      flushWatchTime();
+      const seekTime = (pipPlayerReady && pipPlayer.getCurrentTime) ? pipPlayer.getCurrentTime() : 0;
+      const videoId  = currentVideoId;
+
+      document.getElementById('playerNowTitle').textContent = currentTitle;
+      document.getElementById('playerWrap').classList.add('visible');
+      document.getElementById('pipWrap').classList.remove('visible');
+
+      whenYTApiReady(() => {
+        if (mainPlayer) {
+          if (mainPlayerReady) { mainPlayer.loadVideoById(videoId, seekTime); } else { mainPendingVideoId = videoId; }
+        } else {
+          mainPendingVideoId = videoId;
+          mainPlayer = new YT.Player('mainIframe', {
+            videoId,
+            playerVars: { autoplay: 1, rel: 0, start: Math.floor(seekTime) },
+            events: {
+              onReady: (e) => {
+                mainPlayerReady = true;
+                if (mainPendingVideoId && mainPendingVideoId !== videoId) { e.target.loadVideoById(mainPendingVideoId); } else { e.target.playVideo(); }
+                mainPendingVideoId = null;
+              },
+              onStateChange: (e) => onPlayerStateChange('main', e),
+            },
+          });
+        }
+        activePlayer = mainPlayer;
+      });
+    };
+
+    window.closePiP = () => {
+      flushWatchTime();
+      if (pipPlayer && pipPlayerReady) pipPlayer.stopVideo();
+      pipPendingVideoId = null;
+      document.getElementById('pipWrap').classList.remove('visible');
+      currentVideoId = null;
+      activePlayer = null;
+      renderList();
+    };
+
+    window.switchTab = (id, el) => {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      el.classList.add('active');
+      
+      if (id === 'ranking') fetchAndRenderRanking();
+      if (id === 'stats') renderStatsFromLocal();
+    };
+
+    window.setSort = (key, el) => {
+      currentSort = key;
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      
+      if (key === 'shuffle') {
+        shuffledVideos = [...allVideos].sort(() => Math.random() - 0.5);
+      }
+      
+      renderList();
+    };
+
+    (function () {
+      const pip = document.getElementById('pipWrap');
+      let dragging = false, ox = 0, oy = 0;
+      pip.addEventListener('mousedown', e => {
+        if (e.target.closest('.pip-btn')) return;
+        dragging = true;
+        ox = e.clientX - pip.getBoundingClientRect().left;
+        oy = e.clientY - pip.getBoundingClientRect().top;
+        pip.classList.add('dragging');
+        pip.style.right = 'auto'; pip.style.bottom = 'auto';
+      });
+      document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        pip.style.left = (e.clientX - ox) + 'px';
+        pip.style.top  = (e.clientY - oy) + 'px';
+      });
+      document.addEventListener('mouseup', () => {
+        dragging = false;
+        pip.classList.remove('dragging');
+      });
+    })();
+  </script>
+
+</body>
+</html>
