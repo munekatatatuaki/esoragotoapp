@@ -2045,13 +2045,19 @@
 
     window.enterPiP = () => {
       if (!mainPlayer || !currentVideoId) return;
-      flushWatchTime();
+      
+      // 1. メインプレイヤーの現在の再生時間を取得し、再生を「停止」する
       const seekTime = (mainPlayerReady && mainPlayer.getCurrentTime) ? mainPlayer.getCurrentTime() : 0;
+      if (mainPlayerReady && mainPlayer.pauseVideo) {
+        mainPlayer.pauseVideo(); // ★追加：元の動画を一時停止する
+      }
+      
+      flushWatchTime();
       const videoId  = currentVideoId;
 
       document.getElementById('pipTitle').textContent = currentTitle;
       document.getElementById('pipWrap').classList.add('visible');
-      document.getElementById('playerWrap').classList.remove('visible');
+      document.getElementById('playerWrap').classList.remove('visible'); // メインの枠を非表示
 
       whenYTApiReady(() => {
         if (pipPlayer) {
@@ -2083,13 +2089,19 @@
 
     window.exitPiP = () => {
       if (!pipPlayer || !currentVideoId) return;
-      flushWatchTime();
+      
+      // 2. PiPプレイヤーの現在の再生時間を取得し、再生を「停止」する
       const seekTime = (pipPlayerReady && pipPlayer.getCurrentTime) ? pipPlayer.getCurrentTime() : 0;
+      if (pipPlayerReady && pipPlayer.pauseVideo) {
+        pipPlayer.pauseVideo(); // ★追加：PiPの動画を一時停止する
+      }
+
+      flushWatchTime();
       const videoId  = currentVideoId;
 
       document.getElementById('playerNowTitle').textContent = currentTitle;
       document.getElementById('playerWrap').classList.add('visible');
-      document.getElementById('pipWrap').classList.remove('visible');
+      document.getElementById('pipWrap').classList.remove('visible'); // PiPの枠を非表示
 
       whenYTApiReady(() => {
         if (mainPlayer) {
