@@ -146,7 +146,9 @@
       object-fit: cover;
       background: var(--surface3);
       display: block;
+      transition: transform 0.18s ease;
     }
+    .user-avatar-wrap:hover .user-avatar { transform: scale(1.08); }
 
     .user-name {
       font-size: 12px;
@@ -171,8 +173,9 @@
       font-size: 15px;
       cursor: pointer;
       line-height: 1;
+      transition: color 0.15s ease, transform 0.15s ease;
     }
-    .user-btn:hover { color: var(--text-primary); }
+    .user-btn:hover { color: var(--text-primary); transform: scale(1.15) rotate(8deg); }
 
     .guest-bar {
       display: flex;
@@ -196,16 +199,17 @@
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--accent-light);
-      border-radius: 6px;
+      border-radius: 8px;
       padding: 4px 8px;
       font-size: 11px;
       font-family: var(--font-body);
       cursor: pointer;
-      transition: border-color 0.12s;
+      transition: border-color 0.15s ease, transform 0.15s ease;
       flex-shrink: 0;
     }
 
-    .guest-login-btn:hover { border-color: var(--accent-light); }
+    .guest-login-btn:hover { border-color: var(--accent-light); transform: translateY(-1px); }
+    .guest-login-btn:active { transform: scale(0.95); }
     .guest-login-btn i { font-size: 13px; }
 
     /* ── Sidebar ── */
@@ -303,16 +307,17 @@
       color: var(--text-secondary);
       cursor: pointer;
       border-left: 2px solid transparent;
-      transition: all 0.12s;
+      transition: all 0.16s ease;
     }
 
-    .nav-item:hover { color: var(--text-primary); background: var(--surface2); }
+    .nav-item:hover { color: var(--text-primary); background: var(--surface2); padding-left: 1.4rem; }
     .nav-item.active {
       color: var(--accent-light);
       border-left-color: var(--accent-light);
       background: rgba(124,58,237,0.08);
     }
-    .nav-item i { font-size: 16px; }
+    .nav-item i { font-size: 16px; transition: transform 0.16s ease; }
+    .nav-item:hover i { transform: scale(1.12); }
 
     .player-bar {
       margin-top: auto;
@@ -348,7 +353,23 @@
       transition: margin-left 0.2s ease;
     }
     .section { display: none; padding: 2rem; }
-    .section.active { display: block; }
+    .section.active {
+      display: block;
+      animation: sectionIn .32s cubic-bezier(.22,.61,.36,1);
+    }
+    @keyframes sectionIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .home-welcome {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      line-height: 1.9;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
 
     .page-title {
       font-family: var(--font-display);
@@ -388,7 +409,11 @@
       margin-right: auto;
     }
 
-    #playerWrap.visible { display: block; }
+    #playerWrap.visible { display: block; animation: playerPopIn 0.32s cubic-bezier(.22,.61,.36,1); }
+    @keyframes playerPopIn {
+      from { opacity: 0; transform: scale(0.97) translateY(6px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
 
     #playerWrap iframe {
       display: block;
@@ -421,7 +446,7 @@
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text-secondary);
-      border-radius: 6px;
+      border-radius: 8px;
       padding: 4px 10px;
       font-size: 12px;
       font-family: var(--font-body);
@@ -429,10 +454,11 @@
       display: flex;
       align-items: center;
       gap: 5px;
-      transition: all 0.12s;
+      transition: all 0.16s ease;
     }
 
-    .ctrl-btn:hover { color: var(--text-primary); border-color: var(--accent-light); }
+    .ctrl-btn:hover { color: var(--text-primary); border-color: var(--accent-light); transform: translateY(-1px); }
+    .ctrl-btn:active { transform: scale(0.94); }
     .ctrl-btn i { font-size: 14px; }
 
     /* ── PiP ── */
@@ -508,13 +534,14 @@
       font-size: 12px;
       font-family: var(--font-body);
       cursor: pointer;
-      transition: all 0.12s;
+      transition: all 0.16s ease;
       display: flex;
       align-items: center;
       gap: 4px;
     }
 
-    .sort-btn:hover { border-color: var(--accent-light); color: var(--text-primary); }
+    .sort-btn:hover { border-color: var(--accent-light); color: var(--text-primary); transform: translateY(-1px); }
+    .sort-btn:active { transform: scale(0.96); }
     .sort-btn.active {
       border-color: var(--accent-light);
       color: var(--accent-light);
@@ -530,13 +557,17 @@
       align-items: center;
       gap: 12px;
       padding: 6px 10px;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: background 0.12s;
+      transition: background 0.18s ease, transform 0.18s ease;
     }
 
-    .song-row:hover { background: var(--surface2); }
-    .song-row.playing { background: rgba(124,58,237,0.1); }
+    .song-row:hover { background: var(--surface2); transform: translateX(3px); }
+    .song-row.playing { background: rgba(124,58,237,0.1); animation: rowPulse 1.6s ease-in-out infinite; }
+    @keyframes rowPulse {
+      0%, 100% { background: rgba(124,58,237,0.1); }
+      50% { background: rgba(124,58,237,0.16); }
+    }
 
     .song-num {
       font-size: 13px;
@@ -549,11 +580,14 @@
 
     .song-thumb {
       width: 56px; height: 40px;
-      border-radius: 4px;
+      border-radius: 8px;
       object-fit: cover;
       background: var(--surface3);
       display: block;
+      transition: transform 0.2s ease;
     }
+
+    .song-row:hover .song-thumb { transform: scale(1.08); }
 
     .song-title {
       font-size: 13px;
@@ -568,11 +602,22 @@
       font-size: 16px;
       color: var(--text-muted);
       cursor: pointer;
-      transition: color 0.12s;
+      transition: color 0.15s ease, transform 0.15s ease;
       text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .song-heart:hover, .song-heart.liked { color: #F472B6; }
+    .song-heart:hover { color: #F472B6; transform: scale(1.2); }
+    .song-heart.liked { color: #F472B6; }
+    .song-heart.liked.heart-pop { animation: heartPop 0.4s ease; }
+    @keyframes heartPop {
+      0%   { transform: scale(1); }
+      35%  { transform: scale(1.45); }
+      60%  { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
 
     .song-duration {
       font-size: 12px;
@@ -853,7 +898,7 @@
 
   <div id="authOverlay">
     <div class="auth-box">
-      <div class="auth-logo"><div class="auth-logo-dot"></div>Music App</div>
+      <div class="auth-logo"><div class="auth-logo-dot"></div>No esoragoto, no life</div>
       <div class="auth-sub">Googleアカウントでログインして<br>あなたの音楽データを保存しましょう</div>
       <button class="google-btn" onclick="signInWithGoogle()">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -909,7 +954,7 @@
   <nav class="sidebar">
     <div class="logo" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
       <div style="display: flex; align-items: center; gap: 8px;">
-        <div class="logo-dot"></div>Music App
+        <div class="logo-dot"></div>No esoragoto, no life
       </div>
       <button class="sidebar-toggle-close" onclick="toggleSidebar()" title="メニューを閉じる">
         <i class="ti ti-chevron-left"></i>
@@ -935,8 +980,9 @@
     </div>
 
     <div class="nav-label">メニュー</div>
+    <div class="nav-item" onclick="switchTab('home', this)"><i class="ti ti-home"></i>ホーム</div>
     <div class="nav-item active" onclick="switchTab('songs', this)"><i class="ti ti-music"></i>楽曲一覧</div>
-    <div class="nav-item" onclick="switchTab('lyric', this)"><i class="ti ti-file-text"></i>Lyric to Song</div>
+    <div class="nav-item" onclick="switchTab('lyric', this)"><i class="ti ti-file-text"></i>歌詞検索</div>
     <div class="nav-item" onclick="switchTab('mylist', this)"><i class="ti ti-playlist"></i>マイリスト</div>
     <div class="nav-item" onclick="switchTab('ranking', this)"><i class="ti ti-trophy"></i>ランキング</div>
     <div class="nav-item" onclick="switchTab('stats', this)"><i class="ti ti-chart-bar"></i>My Stats</div>
@@ -948,10 +994,21 @@
 
   <main class="main">
 
+    <div id="home" class="section">
+      <div class="page-title">ホーム</div>
+      <div class="page-sub">ようこそ</div>
+      <div class="home-welcome">
+        「no esoragoto, no life」へようこそ。<br><br>
+        ここはお気に入りの楽曲を集めて、いつでも好きな時に楽しむための場所です。<br>
+        左のメニューから楽曲一覧やマイリスト、歌詞検索などをお楽しみください。
+      </div>
+    </div>
+
     <div id="songs" class="section active">
       <div class="page-title">楽曲一覧</div>
       <div class="page-sub">ライブラリの全楽曲</div>
 
+      <div id="playerAnchor-songs">
       <div id="playerWrap">
         <div id="mainIframe"></div>
         <div class="player-controls">
@@ -961,6 +1018,7 @@
             <button class="ctrl-btn" onclick="closePlayer()"><i class="ti ti-x"></i></button>
           </div>
         </div>
+      </div>
       </div>
 
       <div class="ph search-ph">検索バー</div>
@@ -983,7 +1041,7 @@
     </div>
 
     <div id="lyric" class="section">
-      <div class="page-title">Lyric to Song</div>
+      <div class="page-title">歌詞検索</div>
       <div class="page-sub">歌詞から楽曲を検索・表示</div>
       <div class="lyric-search">
         <div class="ph lyric-input-ph">歌詞入力フィールド</div>
@@ -995,6 +1053,7 @@
     <div id="mylist" class="section">
       <div class="page-title">マイリスト</div>
       <div class="page-sub" id="mylistSub">お気に入りに追加した楽曲</div>
+      <div id="playerAnchor-mylist"></div>
       <div class="list-header">
         <div class="th">#</div>
         <div class="th"></div>
@@ -1575,6 +1634,12 @@
       return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
+    function displayTitle(title) {
+      if (!title) return title;
+      const match = title.match(/『(.+?)』/);
+      return match ? match[1] : title;
+    }
+
     function sortedVideos() {
       const arr = [...allVideos];
       if (currentSort === 'favorite') {
@@ -1599,7 +1664,7 @@
         <div class="song-row ${currentVideoId === v.id ? 'playing' : ''}" onclick="playVideo('${v.id}','${escHtml(v.title)}')">
           <div class="song-num">${currentVideoId === v.id ? '▶' : i + 1}</div>
           <img class="song-thumb" src="${v.thumb}" alt="" loading="lazy">
-          <div class="song-title">${escHtml(v.title)}</div>
+          <div class="song-title">${escHtml(displayTitle(v.title))}</div>
           <div class="song-heart ${favorites.has(v.id) ? 'liked' : ''}" onclick="toggleFav(event,'${v.id}')">
             <i class="ti ti-heart"></i>
           </div>
@@ -1630,7 +1695,7 @@
         <div class="song-row ${currentVideoId === v.id ? 'playing' : ''}" onclick="playVideo('${v.id}','${escHtml(v.title)}')">
           <div class="song-num">${currentVideoId === v.id ? '▶' : i + 1}</div>
           <img class="song-thumb" src="${v.thumb}" alt="" loading="lazy">
-          <div class="song-title">${escHtml(v.title)}</div>
+          <div class="song-title">${escHtml(displayTitle(v.title))}</div>
           <div class="song-heart liked" onclick="toggleFav(event,'${v.id}')">
             <i class="ti ti-heart"></i>
           </div>
@@ -1746,7 +1811,7 @@
           <div class="history-row">
             <img class="history-thumb" src="${video.thumb}" alt="">
             <div class="history-info">
-              <div class="history-title">${escHtml(video.title)}</div>
+              <div class="history-title">${escHtml(displayTitle(video.title))}</div>
               <div class="history-time">${date}</div>
             </div>
           </div>
@@ -1761,6 +1826,12 @@
 
       const wasLiked = favorites.has(id);
       if (wasLiked) favorites.delete(id); else favorites.add(id);
+
+      const heartEl = e.currentTarget;
+      if (heartEl && !wasLiked) {
+        heartEl.classList.add('heart-pop');
+        setTimeout(() => heartEl.classList && heartEl.classList.remove('heart-pop'), 400);
+      }
 
       try {
         if (favorites.has(id)) {
@@ -1784,19 +1855,32 @@
       renderStatsFromLocal();
     };
 
+    function movePlayerToSection(sectionId) {
+      const wrap = document.getElementById('playerWrap');
+      const anchor = document.getElementById('playerAnchor-' + sectionId);
+      if (anchor && wrap && wrap.parentElement !== anchor) {
+        anchor.appendChild(wrap);
+      }
+    }
+
     window.playVideo = (videoId, title) => {
       flushWatchTime();
 
       currentVideoId = videoId;
       currentTitle   = title;
 
+      const activeSection = document.querySelector('.section.active');
+      if (activeSection && (activeSection.id === 'songs' || activeSection.id === 'mylist')) {
+        movePlayerToSection(activeSection.id);
+      }
+
       const usePiP = document.getElementById('pipWrap').classList.contains('visible');
 
       if (usePiP) {
-        document.getElementById('pipTitle').textContent = title;
+        document.getElementById('pipTitle').textContent = displayTitle(title);
         createOrLoadPlayer('pip', videoId);
       } else {
-        document.getElementById('playerNowTitle').textContent = title;
+        document.getElementById('playerNowTitle').textContent = displayTitle(title);
         document.getElementById('playerWrap').classList.add('visible');
         createOrLoadPlayer('main', videoId);
       }
@@ -2055,7 +2139,7 @@
       flushWatchTime();
       const videoId  = currentVideoId;
 
-      document.getElementById('pipTitle').textContent = currentTitle;
+      document.getElementById('pipTitle').textContent = displayTitle(currentTitle);
       document.getElementById('pipWrap').classList.add('visible');
       document.getElementById('playerWrap').classList.remove('visible'); // メインの枠を非表示
 
@@ -2099,7 +2183,7 @@
       flushWatchTime();
       const videoId  = currentVideoId;
 
-      document.getElementById('playerNowTitle').textContent = currentTitle;
+      document.getElementById('playerNowTitle').textContent = displayTitle(currentTitle);
       document.getElementById('playerWrap').classList.add('visible');
       document.getElementById('pipWrap').classList.remove('visible'); // PiPの枠を非表示
 
