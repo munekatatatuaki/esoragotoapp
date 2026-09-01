@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>No esoragoto, no life</title>
+  <title>Music App</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1772,14 +1772,9 @@
           } else {
             mainPendingVideoId = videoId;
             mainPlayer = new YT.Player('mainIframe', {
-            videoId,
-            playerVars: { 
-              autoplay: 1, 
-              rel: 0,
-              controls: 1, // コントロールを表示し、マウスが離れたら自動で隠す
-              modestbranding: 1 // YouTubeロゴを控えめにする
-            },
-            events: {
+              videoId,
+              playerVars: { autoplay: 1, rel: 0 },
+              events: {
                 onReady: (e) => {
                   mainPlayerReady = true;
                   if (mainPendingVideoId && mainPendingVideoId !== videoId) { e.target.loadVideoById(mainPendingVideoId); } else { e.target.playVideo(); }
